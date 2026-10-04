@@ -11,3 +11,5 @@ export * from "./device/DeviceCapabilities";
 export * from "./asset/AssetLifecycle";
 export * from "./animation/AnimationLifecycle";
 export * from "./physics/PhysicsLifecycle";
+
+export * from "./project/ProjectSerializer";
