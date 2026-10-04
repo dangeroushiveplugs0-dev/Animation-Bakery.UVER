@@ -6,6 +6,7 @@ import {AssetManager} from "./engine/AssetManager";
 import {PerformanceManager} from "./engine/performance/PerformanceManager";
 import {AnimationManager} from "./engine/animation/AnimationManager";
 import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
+import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=`<canvas id="viewport"></canvas>
@@ -19,9 +20,9 @@ const scene=new SceneManager(canvas);
 const camera=new CameraControls(scene.camera,canvas);
 const physics=new PhysicsEngine();
 const assets=new AssetManager(scene.scene);
-const performance=new PerformanceManager(scene.renderer);
-const animation=new AnimationManager();
 const device=new BrowserDeviceCapabilities().detect();
+const performance=new PerformanceManager(scene.renderer,device.performanceTier);
+const animation=new AnimationManager();
 const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
 
