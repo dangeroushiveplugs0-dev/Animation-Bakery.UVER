@@ -30,7 +30,6 @@ export class AnimationManager{
     if(this.activeAction){
       this.activeAction.stop();
       this.activeAction.reset();
-      this.activeAction=null as unknown as THREE.AnimationAction;
     }
     this.mixer?.stopAllAction();
     this.mixer?.uncacheRoot(this.mixer.getRoot());
