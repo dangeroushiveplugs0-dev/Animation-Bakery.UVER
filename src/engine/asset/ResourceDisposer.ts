@@ -24,7 +24,7 @@ export function disposeObject3D(root: THREE.Object3D, disposeTextures = true): v
 
       if (disposeTextures) {
         for (const key of TEXTURE_KEYS) {
-          const texture = (material as THREE.MeshStandardMaterial)[key];
+          const texture = (material as unknown as Record<string, THREE.Texture | undefined>)[key];
           if (texture) textures.add(texture);
         }
       }
