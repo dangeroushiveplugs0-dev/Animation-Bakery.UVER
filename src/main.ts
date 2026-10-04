@@ -6,7 +6,6 @@ import {AssetManager} from "./engine/AssetManager";
 import {PerformanceManager} from "./engine/performance/PerformanceManager";
 import {AnimationManager} from "./engine/animation/AnimationManager";
 import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
-import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=`<canvas id="viewport"></canvas>
@@ -43,7 +42,7 @@ input.addEventListener("change",async()=>{
 });
 
 await physics.init();
-let previous=performance.now();
+let previous=globalThis.performance.now();
 
 function frame(time:number){
   const delta=Math.min((time-previous)/1000,0.05);
