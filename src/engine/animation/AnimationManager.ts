@@ -16,6 +16,10 @@ export class AnimationManager implements AnimationLifecycle {
     this.activeAction.play();
   }
 
+  unload() {
+    this.dispose();
+  }
+
   setFPS(fps: number) {
     this.fps = Math.max(1, Math.min(240, fps));
   }
