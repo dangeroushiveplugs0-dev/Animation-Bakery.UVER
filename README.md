@@ -19,7 +19,8 @@ Planned modules include:
 - PhysicsEngine / PhysicsSync
 - TexturePainter / UVPicker
 - AssetManager / VariantManager
-- GLTFImporter / OBJImporter
+- GLTFImporter / OBJImporter / BLENDImporter
+- Blender Model Controls adapter
 - SkeletonManager / BoneManager / WeightManager
 - Wetness material extension
 - Export pipeline
