@@ -1,0 +1,1 @@
+import type {CapacitorConfig} from "@capacitor/cli"; const config:CapacitorConfig={appId:"com.dangeroushive.animationbakery.uver",appName:"Animation Bakery UVER",webDir:"dist",android:{backgroundColor:"#101114"}}; export default config;
