@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {OBJLoader} from "three/examples/jsm/loaders/OBJLoader.js";
+import {applyGltfMaterialCompatibility} from "./GltfMaterialCompatibility";
 
 export class ModelImporter {
   async fromFiles(files: File[]): Promise<THREE.Object3D> {
@@ -17,6 +18,7 @@ export class ModelImporter {
       const loader = new GLTFLoader();
       const buffer = await modelFile.arrayBuffer();
       const result = await loader.parseAsync(buffer, "");
+      applyGltfMaterialCompatibility(result.scene);
       return result.scene;
     }
 
@@ -39,6 +41,7 @@ export class ModelImporter {
 
       try {
         const result = await loader.loadAsync(url);
+        applyGltfMaterialCompatibility(result.scene);
         return result.scene;
       } finally {
         URL.revokeObjectURL(url);
