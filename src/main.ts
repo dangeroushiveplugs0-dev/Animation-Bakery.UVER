@@ -5,10 +5,11 @@ import {PhysicsEngine} from "./engine/physics/PhysicsEngine";
 import {AssetManager} from "./engine/AssetManager";
 import {PerformanceManager} from "./engine/performance/PerformanceManager";
 import {AnimationManager} from "./engine/animation/AnimationManager";
+import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=`<canvas id="viewport"></canvas>
-<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.1 • Three.js WebGL2</small></div>
+<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.2 • Three.js WebGL2</small></div>
 <div class="toolbar"><label class="tool-button">Import Model<input id="model-input" type="file" accept=".glb,.gltf,.obj" hidden></label></div>
 <div id="status" class="status">Ready</div>
 <div class="hint">1 finger: orbit • 2 fingers: pan/zoom</div>`;
@@ -20,6 +21,7 @@ const physics=new PhysicsEngine();
 const assets=new AssetManager(scene.scene);
 const performance=new PerformanceManager(scene.renderer);
 const animation=new AnimationManager();
+const device=new BrowserDeviceCapabilities().detect();
 const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
 
@@ -41,10 +43,22 @@ input.addEventListener("change",async()=>{
 
 await physics.init();
 let previous=performance.now();
+
 function frame(time:number){
-  const delta=Math.min((time-previous)/1000,0.05); previous=time;
-  camera.update(delta); physics.step(delta); animation.update(delta); performance.recordFrame(delta); scene.render(); requestAnimationFrame(frame);
+  const delta=Math.min((time-previous)/1000,0.05);
+  previous=time;
+
+  camera.update(delta);
+  physics.step(delta);
+  animation.update(delta);
+  performance.recordFrame(delta);
+  scene.render();
+
+  requestAnimationFrame(frame);
 }
+
 requestAnimationFrame(frame);
 addEventListener("resize",()=>scene.resize());
 scene.resize();
+
+console.info("UVER device capabilities",device);
