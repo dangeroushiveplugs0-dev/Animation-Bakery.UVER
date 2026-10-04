@@ -3,6 +3,8 @@ import {SceneManager} from "./engine/SceneManager";
 import {CameraControls} from "./engine/CameraControls";
 import {PhysicsEngine} from "./engine/physics/PhysicsEngine";
 import {AssetManager} from "./engine/AssetManager";
+import {PerformanceManager} from "./engine/performance/PerformanceManager";
+import {AnimationManager} from "./engine/animation/AnimationManager";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=`<canvas id="viewport"></canvas>
@@ -16,6 +18,8 @@ const scene=new SceneManager(canvas);
 const camera=new CameraControls(scene.camera,canvas);
 const physics=new PhysicsEngine();
 const assets=new AssetManager(scene.scene);
+const performance=new PerformanceManager(scene.renderer);
+const animation=new AnimationManager();
 const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
 
@@ -26,7 +30,9 @@ input.addEventListener("change",async()=>{
   try{
     const model=await assets.loadModel(file);
     scene.frameObject(model);
-    status.textContent=`Loaded ${file.name}`;
+    const metrics=performance.measureModel(model);
+    status.textContent=`Loaded ${file.name} • ${metrics.triangles.toLocaleString()} tris • ${metrics.meshes} meshes`;
+    animation.dispose();
   }catch(error){
     console.error(error);
     status.textContent=error instanceof Error?error.message:"Import failed";
@@ -37,7 +43,7 @@ await physics.init();
 let previous=performance.now();
 function frame(time:number){
   const delta=Math.min((time-previous)/1000,0.05); previous=time;
-  camera.update(delta); physics.step(delta); scene.render(); requestAnimationFrame(frame);
+  camera.update(delta); physics.step(delta); animation.update(delta); performance.recordFrame(delta); scene.render(); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 addEventListener("resize",()=>scene.resize());
