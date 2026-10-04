@@ -3,27 +3,54 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {OBJLoader} from "three/examples/jsm/loaders/OBJLoader.js";
 
 export class ModelImporter {
-  private readonly gltf = new GLTFLoader();
-  private readonly obj = new OBJLoader();
+  async fromFiles(files: File[]): Promise<THREE.Object3D> {
+    if (!files.length) throw new Error("No model file selected.");
 
-  async fromFile(file: File): Promise<THREE.Object3D> {
-    const name = file.name.toLowerCase();
+    const modelFile = files.find(file => /\.(glb|gltf|obj)$/i.test(file.name));
+    if (!modelFile) {
+      throw new Error("Unsupported model format. Use GLB, GLTF, or OBJ.");
+    }
+
+    const name = modelFile.name.toLowerCase();
+
     if (name.endsWith(".glb")) {
-      const buffer = await file.arrayBuffer();
-      const result = await this.gltf.parseAsync(buffer, "");
+      const loader = new GLTFLoader();
+      const buffer = await modelFile.arrayBuffer();
+      const result = await loader.parseAsync(buffer, "");
       return result.scene;
     }
+
     if (name.endsWith(".gltf")) {
-      const url = URL.createObjectURL(file);
+      const manager = new THREE.LoadingManager();
+      const urls = new Map<string,string>();
+
+      for (const file of files) {
+        urls.set(file.name, URL.createObjectURL(file));
+      }
+
+      manager.setURLModifier(requestedUrl => {
+        const clean = requestedUrl.split("?")[0].split("#")[0];
+        const fileName = decodeURIComponent(clean.split("/").pop() || clean);
+        return urls.get(fileName) || requestedUrl;
+      });
+
+      const loader = new GLTFLoader(manager);
+      const url = URL.createObjectURL(modelFile);
+
       try {
-        return await this.gltf.loadAsync(url).then(result => result.scene);
+        const result = await loader.loadAsync(url);
+        return result.scene;
       } finally {
         URL.revokeObjectURL(url);
+        for (const value of urls.values()) URL.revokeObjectURL(value);
       }
     }
-    if (name.endsWith(".obj")) {
-      return this.obj.parse(await file.text());
-    }
-    throw new Error("Unsupported model format. Use GLB, GLTF, or OBJ.");
+
+    const loader = new OBJLoader();
+    return loader.parse(await modelFile.text());
+  }
+
+  async fromFile(file: File): Promise<THREE.Object3D> {
+    return this.fromFiles([file]);
   }
 }
