@@ -9,6 +9,7 @@
     "@capacitor/core":"^7.4.3",
     "@dimforge/rapier3d-compat":"^0.19.3",
     "camera-controls":"^3.1.2",
+    "jsblender":"^0.0.4",
     "three":"^0.186.0"
   },
   "devDependencies":{
