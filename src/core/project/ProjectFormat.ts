@@ -26,3 +26,17 @@ export function createProjectManifest(appVersion: string): ProjectManifest {
     appVersion
   };
 }
+
+export function createEmptyProject(appVersion: string): AnimationBakeryProject {
+  return {
+    manifest: createProjectManifest(appVersion),
+    model: null,
+    materials: [],
+    textures: [],
+    rig: null,
+    animations: [],
+    physics: null,
+    editor: null,
+    pluginData: {}
+  };
+}
