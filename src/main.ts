@@ -10,7 +10,7 @@ import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabiliti
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=`<canvas id="viewport"></canvas>
 <div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.2 • Three.js WebGL2</small></div>
-<div class="toolbar"><label class="tool-button">Import Model<input id="model-input" type="file" accept=".glb,.gltf,.obj" hidden></label></div>
+<div class="toolbar"><label class="tool-button">Import Model<input id="model-input" type="file" accept=".glb,.gltf,.obj,.bin,.png,.jpg,.jpeg" multiple hidden></label></div>
 <div id="status" class="status">Ready</div>
 <div class="hint">1 finger: orbit • 2 fingers: pan/zoom</div>`;
 
@@ -26,11 +26,12 @@ const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
 
 input.addEventListener("change",async()=>{
-  const file=input.files?.[0];
+  const files=Array.from(input.files||[]);
+  const file=files.find(value=>/\\.(glb|gltf|obj)$/i.test(value.name));
   if(!file)return;
   status.textContent=`Loading ${file.name}…`;
   try{
-    const model=await assets.loadModel(file);
+    const model=await assets.loadModels(files);
     scene.frameObject(model);
     const metrics=performance.measureModel(model);
     status.textContent=`Loaded ${file.name} • ${metrics.triangles.toLocaleString()} tris • ${metrics.meshes} meshes`;
