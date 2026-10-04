@@ -22,35 +22,56 @@ function textureSize(texture:THREE.Texture):number{
 export function measureModel(root:THREE.Object3D):ModelMetrics{
   let meshes=0,skinnedMeshes=0,vertices=0,triangles=0,bones=0,textureMB=0;
   const materials=new Set<string>();
-  const textures=new Set<string>();
+  const textures=new Map<string,THREE.Texture>();
 
   root.traverse(object=>{
     const mesh=object as THREE.Mesh;
     if(!mesh.isMesh)return;
+
     meshes++;
     if((mesh as THREE.SkinnedMesh).isSkinnedMesh){
       skinnedMeshes++;
       bones+=((mesh as THREE.SkinnedMesh).skeleton?.bones.length||0);
     }
+
     const position=mesh.geometry.getAttribute("position");
     if(position){
       vertices+=position.count;
       const index=mesh.geometry.getIndex();
       triangles+=index?Math.floor(index.count/3):Math.floor(position.count/3);
     }
+
     const list=Array.isArray(mesh.material)?mesh.material:[mesh.material];
     for(const material of list){
       if(!material)continue;
       materials.add(material.uuid);
-      for(const key of ["map","normalMap","roughnessMap","metalnessMap","aoMap","emissiveMap","alphaMap"] as const){
+
+      for(const key of [
+        "map",
+        "normalMap",
+        "roughnessMap",
+        "metalnessMap",
+        "aoMap",
+        "emissiveMap",
+        "alphaMap"
+      ] as const){
         const texture=(material as THREE.MeshStandardMaterial)[key];
-        if(texture){
-          textures.add(texture.uuid);
+        if(texture && !textures.has(texture.uuid)){
+          textures.set(texture.uuid,texture);
           textureMB+=textureSize(texture);
         }
       }
     }
   });
 
-  return {meshes,skinnedMeshes,vertices,triangles,materials,textures:textures.size,textureMB,bones};
+  return {
+    meshes,
+    skinnedMeshes,
+    vertices,
+    triangles,
+    materials,
+    textures:textures.size,
+    textureMB,
+    bones
+  };
 }
