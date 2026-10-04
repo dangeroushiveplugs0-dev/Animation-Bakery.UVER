@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-export interface ModelMetrics{
+export interface ModelMetrics {
   meshes:number;
   skinnedMeshes:number;
   vertices:number;
@@ -11,7 +11,7 @@ export interface ModelMetrics{
   bones:number;
 }
 
-function textureSize(texture:THREE.Texture):number{
+function textureSize(texture:THREE.Texture):number {
   const image=texture.image as {width?:number;height?:number}|undefined;
   const width=image?.width||0;
   const height=image?.height||0;
@@ -19,7 +19,7 @@ function textureSize(texture:THREE.Texture):number{
   return width*height*4*1.33/(1024*1024);
 }
 
-export function measureModel(root:THREE.Object3D):ModelMetrics{
+export function measureModel(root:THREE.Object3D):ModelMetrics {
   let meshes=0,skinnedMeshes=0,vertices=0,triangles=0,bones=0,textureMB=0;
   const materials=new Set<string>();
   const textures=new Map<string,THREE.Texture>();
@@ -47,15 +47,10 @@ export function measureModel(root:THREE.Object3D):ModelMetrics{
       materials.add(material.uuid);
 
       for(const key of [
-        "map",
-        "normalMap",
-        "roughnessMap",
-        "metalnessMap",
-        "aoMap",
-        "emissiveMap",
-        "alphaMap"
+        "map","normalMap","roughnessMap","metalnessMap",
+        "aoMap","emissiveMap","alphaMap"
       ] as const){
-        const texture=(material as THREE.MeshStandardMaterial)[key];
+        const texture=(material as unknown as Record<string,THREE.Texture|undefined>)[key];
         if(texture && !textures.has(texture.uuid)){
           textures.set(texture.uuid,texture);
           textureMB+=textureSize(texture);
@@ -69,7 +64,7 @@ export function measureModel(root:THREE.Object3D):ModelMetrics{
     skinnedMeshes,
     vertices,
     triangles,
-    materials,
+    materials:materials.size,
     textures:textures.size,
     textureMB,
     bones
