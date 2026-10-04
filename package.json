@@ -1,0 +1,19 @@
+{
+  "name":"animation-bakery-uver",
+  "version":"0.1.0",
+  "private":true,
+  "type":"module",
+  "scripts":{"dev":"vite","build":"tsc && vite build","preview":"vite preview"},
+  "dependencies":{
+    "@capacitor/core":"^7.4.3",
+    "@dimforge/rapier3d-compat":"^0.19.3",
+    "camera-controls":"^3.1.2",
+    "three":"^0.186.0"
+  },
+  "devDependencies":{
+    "@capacitor/cli":"^7.4.3",
+    "@types/three":"^0.186.0",
+    "typescript":"^5.8.3",
+    "vite":"^7.1.7"
+  }
+}
