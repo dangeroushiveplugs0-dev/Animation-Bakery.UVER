@@ -13,3 +13,6 @@ export * from "./animation/AnimationLifecycle";
 export * from "./physics/PhysicsLifecycle";
 
 export * from "./project/ProjectSerializer";
+
+export * from "./input/InputTypes";
+export * from "./selection/SelectionTypes";
