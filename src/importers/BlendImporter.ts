@@ -80,7 +80,7 @@ async function loadTextures(blend:ReturnType<typeof parseBlend>,files:File[]){
   for(const image of extractImages(blend)){
     let url:string|undefined;
     if(image.packed?.length){
-      url=URL.createObjectURL(new Blob([image.packed],{type:"image/png"}));
+      url=URL.createObjectURL(new Blob([new Uint8Array(image.packed).buffer as ArrayBuffer],{type:"image/png"}));
     }else{
       const file=findFile(files,image.filepath);
       if(file) url=URL.createObjectURL(file);
