@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {ModelImporter} from "../importers/ModelImporter";
 import type {AssetLifecycle} from "../core/asset/AssetLifecycle";
+import {disposeObject3D} from "./asset/ResourceDisposer";
 
 export class AssetManager implements AssetLifecycle {
   private readonly importer = new ModelImporter();
@@ -16,8 +17,12 @@ export class AssetManager implements AssetLifecycle {
   }
 
   async loadModel(file: File): Promise<THREE.Object3D> {
-    const model = await this.import(file);
-    model.name = file.name;
+    return this.loadModels([file]);
+  }
+
+  async loadModels(files: File[]): Promise<THREE.Object3D> {
+    const model = await this.importer.fromFiles(files);
+    model.name = files.find(file => /\.(glb|gltf|obj)$/i.test(file.name))?.name || "ImportedModel";
     await this.replaceCurrent(model);
     return model;
   }
@@ -37,40 +42,11 @@ export class AssetManager implements AssetLifecycle {
 
   dispose(asset: unknown) {
     if (!(asset instanceof THREE.Object3D)) return;
-    this.disposeObject(asset);
-  }
-
-  private disposeObject(root: THREE.Object3D) {
-    root.traverse(object => {
-      const mesh = object as THREE.Mesh;
-      if (!mesh.isMesh) return;
-
-      mesh.geometry?.dispose();
-
-      const materials = Array.isArray(mesh.material)
-        ? mesh.material
-        : [mesh.material];
-
-      for (const material of materials) {
-        for (const key of [
-          "map",
-          "normalMap",
-          "roughnessMap",
-          "metalnessMap",
-          "aoMap",
-          "emissiveMap",
-          "alphaMap"
-        ] as const) {
-          const texture = (material as THREE.MeshStandardMaterial)[key];
-          texture?.dispose();
-        }
-        material.dispose();
-      }
-    });
+    disposeObject3D(asset);
   }
 
   clear() {
-    this.disposeObject(this.root);
+    disposeObject3D(this.root);
     this.root.clear();
   }
 }
