@@ -1,21 +1,25 @@
 {
-  "name":"animation-bakery-uver",
-  "version":"0.1.5",
-  "private":true,
-  "type":"module",
-  "scripts":{"dev":"vite","build":"tsc && vite build","preview":"vite preview"},
-  "dependencies":{
-    "@capacitor/android":"^7.4.3",
-    "@capacitor/core":"^7.4.3",
-    "@dimforge/rapier3d-compat":"^0.19.3",
-    "camera-controls":"^3.1.2",
-    "jsblender":"^0.0.4",
-    "three":"^0.186.0"
+  "name": "animation-bakery-uver",
+  "version": "0.1.6",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
-  "devDependencies":{
-    "@capacitor/cli":"^7.4.3",
-    "@types/three":"^0.186.0",
-    "typescript":"^5.8.3",
-    "vite":"^7.1.7"
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@dimforge/rapier3d-compat": "^0.19.3",
+    "camera-controls": "^3.1.2",
+    "jsblender": "^0.0.4",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@types/three": "^0.186.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.1.7"
   }
 }
