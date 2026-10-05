@@ -8,6 +8,7 @@ import {
   extractMeshes,
   parseBlend
 } from "jsblender";
+import {inspectBlenderCharacterData} from "../character/BlenderCharacterScanner";
 
 type BlendMesh=ReturnType<typeof extractMeshes>[number];
 type BlendMaterial=ReturnType<typeof extractMaterials>[number];
@@ -254,7 +255,26 @@ export class BlendImporter{
     const root=new THREE.Group();
     root.name=modelFile.name;
 
-    const blendMeshes=extractMeshes(blend);
+    // Inspect Blender data before mesh extraction so the character layer can
+    // still understand collections, custom properties, armatures and provider
+    // signals independently of the render/import path.
+    const characterMetadata=inspectBlenderCharacterData(blend);
+    root.userData.blenderCharacterMetadata=characterMetadata;
+
+    let blendMeshes:ReturnType<typeof extractMeshes>;
+    try{
+      blendMeshes=extractMeshes(blend);
+    }catch(error){
+      const message=error instanceof Error?error.message:String(error);
+      if(message.toLowerCase().includes("attribute_storage")){
+        throw new Error(
+          "Blender mesh import is not compatible with this file's Attribute Storage layout. "+
+          "The character metadata was readable, but jsblender could not decode the mesh geometry. "+
+          "This can happen with Blender files whose mesh data uses an unsupported layout."
+        );
+      }
+      throw error;
+    }
     const evaluatedMeshes=evaluateAllMeshes(blend);
     const blendMaterials=extractMaterials(blend);
     const blendObjects=extractObjects(blend);
