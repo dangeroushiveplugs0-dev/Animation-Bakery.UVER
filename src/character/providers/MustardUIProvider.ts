@@ -1,20 +1,20 @@
 import type {CharacterData} from "../CharacterData";
 import type {CharacterProvider} from "./CharacterProvider";
 
-/**
- * Read-only adapter foundation.
- * It intentionally does not execute MustardUI Python or copy its code.
- * Future detection will inspect exported Blender custom properties,
- * collections and object relationships produced by MustardUI-compatible models.
- */
 export class MustardUIProvider implements CharacterProvider{
   readonly id="mustardui" as const;
 
-  canRead(root:unknown):boolean{
-    return !!root&&typeof root==="object";
-  }
+  canRead(root:unknown):boolean{return !!root&&typeof root==="object";}
 
-  inspect(_root:unknown):Partial<CharacterData>{
-    return {providers:["mustardui"],raw:{mustardui:{detected:false}}};
+  inspect(root:unknown):Partial<CharacterData>{
+    const userData=(root as {userData?:Record<string,unknown>}).userData??{};
+    const metadata=userData.blenderCharacterMetadata as {providers?:string[];outfits?:CharacterData["outfits"];hair?:CharacterData["hair"]}|undefined;
+    if(!metadata?.providers?.includes("mustardui")) return {};
+    return {
+      providers:["mustardui"],
+      outfits:metadata.outfits??[],
+      hair:metadata.hair??[],
+      raw:{mustardui:metadata}
+    };
   }
 }
