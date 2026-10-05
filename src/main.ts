@@ -4,8 +4,8 @@ import {CameraControls} from "./engine/CameraControls";
 import {PhysicsEngine} from "./engine/physics/PhysicsEngine";
 import {AssetManager} from "./engine/AssetManager";
 import {PerformanceManager} from "./engine/performance/PerformanceManager";
-import {AnimationManager} from "./engine/animation/AnimationManager";
 import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
+import {AnimationManager} from "./engine/animation/AnimationManager";
 import {CharacterController} from "./character/CharacterController";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
@@ -20,19 +20,22 @@ const canvas=document.querySelector<HTMLCanvasElement>("#viewport")!;
 const scene=new SceneManager(canvas);
 const camera=new CameraControls(scene.camera,canvas);
 const physics=new PhysicsEngine();
-const assets=new AssetManager(scene.scene);
+const assets=new AssetManager(scene.scene,scene.renderer);
 const device=new BrowserDeviceCapabilities().detect();
 const performance=new PerformanceManager(scene.renderer,device.performanceTier);
 const animation=new AnimationManager();
 const character=new CharacterController();
 const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
+let importing=false;
 
 input.addEventListener("change",async()=>{
+  if(importing) return;
   const files=Array.from(input.files||[]);
   const file=files.find(value=>/\.(blend|glb|gltf|obj)$/i.test(value.name));
   if(!file) return;
-  status.textContent="Loading "+file.name+"…";
+  importing=true;
+  status.textContent="Releasing previous model…";
   try{
     const model=await assets.loadModels(files);
     scene.frameObject(model);
@@ -47,6 +50,7 @@ input.addEventListener("change",async()=>{
     console.error(error);
     status.textContent=error instanceof Error?error.message:"Import failed";
   }finally{
+    importing=false;
     input.value="";
   }
 });
