@@ -4,17 +4,27 @@ import {
   extractArmatures,
   extractImages,
   extractMaterials,
-  extractMeshes,
   extractObjects,
+  extractMeshes,
   parseBlend
 } from "jsblender";
 
 type BlendMesh=ReturnType<typeof extractMeshes>[number];
 type BlendMaterial=ReturnType<typeof extractMaterials>[number];
 
+function normalizePath(value:string):string{
+  return value
+    .replace(/\\/g,"/")
+    .replace(/^\.\//,"")
+    .replace(/^\/+/,"")
+    .split("?")[0]
+    .split("#")[0]
+    .toLowerCase();
+}
+
 function basename(value:string):string{
-  const clean=value.replace(/\\/g,"/").split("?")[0].split("#")[0];
-  return decodeURIComponent(clean.split("/").pop()||clean).replace(/^\\+/,"").toLowerCase();
+  const clean=normalizePath(value);
+  return clean.split("/").pop()||clean;
 }
 
 function findFile(files:File[],path:string):File|undefined{
@@ -32,21 +42,22 @@ function createGeometry(mesh:BlendMesh):THREE.BufferGeometry{
   const groups:Array<{start:number;count:number;materialIndex:number}>=[];
 
   let firstIndex=0;
+
   for(let face=0;face<mesh.faceCount;face++){
     const start=mesh.faceOffsets[face];
     const end=mesh.faceOffsets[face+1];
     const corners=end-start;
     if(corners<3) continue;
 
-    const materialIndex=Math.min(
-      mesh.materialSlotNames.length-1,
-      mesh.materialIndices[face]??0
-    );
+    const rawMaterialIndex=mesh.materialIndices[face]??0;
+    const materialIndex=mesh.materialSlotNames.length
+      ?Math.max(0,Math.min(mesh.materialSlotNames.length-1,rawMaterialIndex))
+      :-1;
 
     for(let fan=1;fan<corners-1;fan++){
-      const cornerIndices=[start,start+fan,start+fan+1];
-      for(const cornerIndex of cornerIndices){
+      for(const cornerIndex of [start,start+fan,start+fan+1]){
         const vertexIndex=mesh.cornerVertices[cornerIndex];
+
         positions.push(
           mesh.vertices[vertexIndex*3]??0,
           mesh.vertices[vertexIndex*3+1]??0,
@@ -71,11 +82,17 @@ function createGeometry(mesh:BlendMesh):THREE.BufferGeometry{
 
     const count=(corners-2)*3;
     const previous=groups[groups.length-1];
-    if(previous&&previous.materialIndex===materialIndex&&previous.start+previous.count===firstIndex){
+    if(
+      materialIndex>=0&&
+      previous&&
+      previous.materialIndex===materialIndex&&
+      previous.start+previous.count===firstIndex
+    ){
       previous.count+=count;
-    }else{
+    }else if(materialIndex>=0){
       groups.push({start:firstIndex,count,materialIndex});
     }
+
     firstIndex+=count;
   }
 
@@ -84,13 +101,21 @@ function createGeometry(mesh:BlendMesh):THREE.BufferGeometry{
   if(uvs.length) geometry.setAttribute("uv",new THREE.Float32BufferAttribute(uvs,2));
 
   for(const group of groups){
-    if(group.materialIndex>=0) geometry.addGroup(group.start,group.count,group.materialIndex);
+    geometry.addGroup(group.start,group.count,group.materialIndex);
   }
 
+  if(!mesh.vertexNormals.length) geometry.computeVertexNormals();
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
-  if(!mesh.vertexNormals.length) geometry.computeVertexNormals();
   return geometry;
+}
+
+function findMaterial(
+  byName:Map<string,BlendMaterial>,
+  name:string
+):BlendMaterial|undefined{
+  return byName.get(name)||byName.get(name.trim())||
+    [...byName.entries()].find(([key])=>key.toLowerCase()===name.toLowerCase())?.[1];
 }
 
 function createMaterials(
@@ -101,26 +126,53 @@ function createMaterials(
   const names=mesh.materialSlotNames.length?mesh.materialSlotNames:["Material"];
 
   return names.map(name=>{
-    const source=byName.get(name);
+    const source=findMaterial(byName,name);
     const p=source?.shader?.principled;
     const base=p?.baseColor??source?.diffuse??[0.72,0.72,0.72,1];
+    const alpha=p?.alpha??base[3]??1;
+
     const material=new THREE.MeshStandardMaterial({
       name,
       color:new THREE.Color(base[0],base[1],base[2]),
       metalness:p?.metallic??source?.metallic??0,
       roughness:p?.roughness??source?.roughness??0.7,
-      transparent:(p?.alpha??base[3]??1)<0.999,
-      opacity:p?.alpha??base[3]??1
+      transparent:alpha<0.999,
+      opacity:alpha
     });
 
-    if(p?.baseColorImage) material.map=textures.get(basename(p.baseColorImage))||null;
-    if(p?.normalImage) material.normalMap=textures.get(basename(p.normalImage))||null;
-    if(p?.roughnessImage) material.roughnessMap=textures.get(basename(p.roughnessImage))||null;
-    if(p?.metallicImage) material.metalnessMap=textures.get(basename(p.metallicImage))||null;
+    if(p?.baseColorImage){
+      material.map=textures.get(normalizePath(p.baseColorImage))
+        ||textures.get(basename(p.baseColorImage))
+        ||null;
+    }
+    if(p?.normalImage){
+      material.normalMap=textures.get(normalizePath(p.normalImage))
+        ||textures.get(basename(p.normalImage))
+        ||null;
+    }
+    if(p?.roughnessImage){
+      material.roughnessMap=textures.get(normalizePath(p.roughnessImage))
+        ||textures.get(basename(p.roughnessImage))
+        ||null;
+    }
+    if(p?.metallicImage){
+      material.metalnessMap=textures.get(normalizePath(p.metallicImage))
+        ||textures.get(basename(p.metallicImage))
+        ||null;
+    }
 
     material.needsUpdate=true;
     return material;
   });
+}
+
+function mimeTypeForImage(path:string):string{
+  const lower=path.toLowerCase();
+  if(lower.endsWith(".jpg")||lower.endsWith(".jpeg")) return "image/jpeg";
+  if(lower.endsWith(".webp")) return "image/webp";
+  if(lower.endsWith(".avif")) return "image/avif";
+  if(lower.endsWith(".gif")) return "image/gif";
+  return "image/png";
 }
 
 async function loadTextures(
@@ -137,7 +189,7 @@ async function loadTextures(
     if(image.packed?.length){
       const bytes=new Uint8Array(image.packed);
       url=URL.createObjectURL(
-        new Blob([bytes.buffer as ArrayBuffer],{type:"image/png"})
+        new Blob([bytes],{type:mimeTypeForImage(image.filepath||image.name)})
       );
     }else{
       const file=findFile(files,image.filepath);
@@ -149,10 +201,24 @@ async function loadTextures(
 
     try{
       const texture=await loader.loadAsync(url);
+
+      // Blender UVs use the conventional bottom-left image origin.
+      // TextureLoader images otherwise default to a vertically flipped
+      // upload compared with glTF's already-correct orientation.
+      texture.flipY=true;
       texture.colorSpace=THREE.SRGBColorSpace;
-      texture.flipY=false;
-      textures.set(basename(image.name),texture);
-      textures.set(basename(image.filepath),texture);
+      texture.needsUpdate=true;
+
+      const aliases=[
+        normalizePath(image.name),
+        basename(image.name),
+        normalizePath(image.filepath),
+        basename(image.filepath)
+      ];
+
+      for(const alias of aliases){
+        if(alias) textures.set(alias,texture);
+      }
     }catch(error){
       console.warn("UVER: could not load Blender image",image.name,error);
     }
@@ -199,16 +265,20 @@ export class BlendImporter{
     const meshTemplates=new Map<string,THREE.Object3D>();
 
     for(const mesh of blendMeshes){
-      const evaluated=evaluatedMeshes.get(
-        blendObjects.find(object=>object.type===1&&object.dataName===mesh.name)?.name||""
+      const sourceObject=blendObjects.find(
+        object=>object.type===1&&object.dataName===mesh.name
       );
-      const sourceMesh=evaluated??mesh;
+      const sourceMesh=sourceObject
+        ?evaluatedMeshes.get(sourceObject.name)??mesh
+        :mesh;
+
       const geometry=createGeometry(sourceMesh);
       const materials=createMaterials(sourceMesh,materialsByName,textures);
       const object=new THREE.Mesh(
         geometry,
         materials.length===1?materials[0]:materials
       );
+
       object.name=mesh.name;
       copyCustomProperties(object,mesh.customProperties);
       meshTemplates.set(mesh.name,object);
@@ -233,9 +303,11 @@ export class BlendImporter{
     for(const objectData of blendObjects){
       const object=objectsByName.get(objectData.name);
       if(!object) continue;
+
       const parent=objectData.parentName
         ?objectsByName.get(objectData.parentName)
         :undefined;
+
       (parent??root).add(object);
     }
 
