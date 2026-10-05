@@ -6,6 +6,7 @@ import {AssetManager} from "./engine/AssetManager";
 import {PerformanceManager} from "./engine/performance/PerformanceManager";
 import {AnimationManager} from "./engine/animation/AnimationManager";
 import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
+import {CharacterController} from "./character/CharacterController";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=
@@ -23,6 +24,7 @@ const assets=new AssetManager(scene.scene);
 const device=new BrowserDeviceCapabilities().detect();
 const performance=new PerformanceManager(scene.renderer,device.performanceTier);
 const animation=new AnimationManager();
+const character=new CharacterController();
 const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
 
@@ -35,7 +37,11 @@ input.addEventListener("change",async()=>{
     const model=await assets.loadModels(files);
     scene.frameObject(model);
     const metrics=performance.measureModel(model);
-    status.textContent="Loaded "+file.name+" • "+metrics.triangles.toLocaleString()+" tris • "+metrics.meshes+" meshes";
+    const characterData=character.inspect(model);
+    const providerLabel=characterData.providers.join("+");
+    const controlCount=characterData.outfits.length+characterData.hair.length+characterData.morphs.length;
+    status.textContent="Loaded "+file.name+" • "+metrics.triangles.toLocaleString()+" tris • "+
+      metrics.meshes+" meshes • "+providerLabel+" • "+controlCount+" character controls";
     animation.dispose();
   }catch(error){
     console.error(error);
