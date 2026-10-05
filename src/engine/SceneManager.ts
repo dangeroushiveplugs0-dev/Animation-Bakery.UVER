@@ -6,7 +6,7 @@ export class SceneManager {
   readonly camera = new THREE.PerspectiveCamera(55, 1, 0.01, 1000);
 
   constructor(canvas: HTMLCanvasElement) {
-    this.scene.background = new THREE.Color(0x101114);
+    this.scene.background = new THREE.Color(0x111214);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
@@ -17,10 +17,10 @@ export class SceneManager {
     this.camera.position.set(3, 2.2, 4.5);
     this.camera.lookAt(0, 0, 0);
 
-    const grid = new THREE.GridHelper(20, 20, 0x39404a, 0x252a31);
+    const grid = new THREE.GridHelper(20, 20, 0x343a33, 0x252925);
     this.scene.add(grid);
 
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x20242b, 2.2));
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x20241f, 2.2));
     const key = new THREE.DirectionalLight(0xffffff, 2.5);
     key.position.set(4, 6, 3);
     this.scene.add(key);
