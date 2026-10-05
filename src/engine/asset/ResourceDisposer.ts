@@ -1,37 +1,45 @@
 import * as THREE from "three";
 
-const TEXTURE_KEYS = [
-  "map","normalMap","roughnessMap","metalnessMap","aoMap",
-  "emissiveMap","alphaMap","clearcoatMap","clearcoatNormalMap",
-  "clearcoatRoughnessMap"
-] as const;
+export function disposeObject3D(root:THREE.Object3D,disposeTextures=true):void{
+  const textures=new Set<THREE.Texture>();
+  const materials=new Set<THREE.Material>();
+  const geometries=new Set<THREE.BufferGeometry>();
+  const skeletons=new Set<THREE.Skeleton>();
 
-export function disposeObject3D(root: THREE.Object3D, disposeTextures = true): void {
-  const textures = new Set<THREE.Texture>();
-  const materials = new Set<THREE.Material>();
-  const geometries = new Set<THREE.BufferGeometry>();
+  root.traverse(object=>{
+    const renderable=object as THREE.Object3D & {
+      geometry?:THREE.BufferGeometry;
+      material?:THREE.Material|THREE.Material[];
+      skeleton?:THREE.Skeleton;
+    };
 
-  root.traverse(object => {
-    const mesh = object as THREE.Mesh;
-    if (!mesh.isMesh) return;
+    if(renderable.geometry instanceof THREE.BufferGeometry){
+      geometries.add(renderable.geometry);
+    }
 
-    if (mesh.geometry) geometries.add(mesh.geometry);
+    if(renderable.skeleton instanceof THREE.Skeleton){
+      skeletons.add(renderable.skeleton);
+    }
 
-    const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    for (const material of list) {
-      if (!material) continue;
+    const list=Array.isArray(renderable.material)
+      ?renderable.material
+      :renderable.material?[renderable.material]:[];
+
+    for(const material of list){
+      if(!(material instanceof THREE.Material)) continue;
       materials.add(material);
 
-      if (disposeTextures) {
-        for (const key of TEXTURE_KEYS) {
-          const texture = (material as unknown as Record<string, THREE.Texture | undefined>)[key];
-          if (texture) textures.add(texture);
+      if(disposeTextures){
+        for(const key of Object.keys(material as unknown as Record<string,unknown>)){
+          const value=(material as unknown as Record<string,unknown>)[key];
+          if(value instanceof THREE.Texture) textures.add(value);
         }
       }
     }
   });
 
-  geometries.forEach(value => value.dispose());
-  materials.forEach(value => value.dispose());
-  if (disposeTextures) textures.forEach(value => value.dispose());
+  skeletons.forEach(value=>value.boneTexture?.dispose());
+  geometries.forEach(value=>value.dispose());
+  materials.forEach(value=>value.dispose());
+  if(disposeTextures) textures.forEach(value=>value.dispose());
 }
