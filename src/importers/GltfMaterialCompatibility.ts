@@ -11,21 +11,21 @@ export function applyGltfMaterialCompatibility(root:THREE.Object3D):void{
       ?mesh.material
       :[mesh.material];
 
-    const hasNonReflectionMaterial=materials.some(
-      material=>!!material&&!REFLECTION_MATERIAL_PATTERN.test(material.name)
-    );
+    const hasTexturedNonReflectionMaterial=materials.some(material=>{
+      if(!material||REFLECTION_MATERIAL_PATTERN.test(material.name)) return false;
+      const standard=material as THREE.MeshStandardMaterial;
+      return !!standard.map;
+    });
 
     for(const material of materials){
       if(!material||!REFLECTION_MATERIAL_PATTERN.test(material.name)) continue;
 
-      // Reflection-overlay materials are only suppressed when the same mesh
-      // also has a real non-reflection material underneath them. This prevents
-      // the compatibility pass from deleting standalone parts such as eyes,
-      // ears, small accessories, or other reflection-named meshes.
-      if(!hasNonReflectionMaterial) continue;
+      // Only suppress a reflection overlay when the same mesh has an actual
+      // textured material underneath it. Reflection-named standalone meshes
+      // are left completely intact so details such as eyes/ears/accessories
+      // cannot disappear just because of their material name.
+      if(!hasTexturedNonReflectionMaterial) continue;
 
-      // Some exporters create reflection-overlay materials for another
-      // renderer. An opaque Three.js fallback would cover the real texture.
       material.transparent=true;
       material.opacity=0;
       material.depthWrite=false;
