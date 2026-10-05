@@ -1,4 +1,5 @@
 import "./styles.css";
+import * as THREE from "three";
 import {SceneManager} from "./engine/SceneManager";
 import {CameraControls} from "./engine/CameraControls";
 import {PhysicsEngine} from "./engine/physics/PhysicsEngine";
