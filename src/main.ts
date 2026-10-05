@@ -7,13 +7,14 @@ import {PerformanceManager} from "./engine/performance/PerformanceManager";
 import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabilities";
 import {AnimationManager} from "./engine/animation/AnimationManager";
 import {CharacterController} from "./character/CharacterController";
+import {DistanceQualityManager} from "./engine/performance/DistanceQualityManager";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=
   '<canvas id="viewport"></canvas>'+
-  '<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.4 • Three.js WebGL2</small></div>'+
+  '<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.5 • Three.js WebGL2</small></div>'+
   '<div class="toolbar"><label class="tool-button">Import Model<input id="model-input" type="file" accept=".blend,.glb,.gltf,.obj,.bin,.png,.jpg,.jpeg" multiple hidden></label></div>'+
-  '<div id="status" class="status">Ready</div>'+
+  '<div id="status" class="status" hidden></div>'+
   '<div class="hint">1 finger: orbit • 2 fingers: pan/zoom</div>';
 
 const canvas=document.querySelector<HTMLCanvasElement>("#viewport")!;
@@ -23,11 +24,21 @@ const physics=new PhysicsEngine();
 const assets=new AssetManager(scene.scene,scene.renderer);
 const device=new BrowserDeviceCapabilities().detect();
 const performance=new PerformanceManager(scene.renderer,device.performanceTier);
+const distanceQuality=new DistanceQualityManager(scene.renderer);
 const animation=new AnimationManager();
 const character=new CharacterController();
 const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
 let importing=false;
+let currentModel:THREE.Object3D|null=null;
+
+function showStatus(message:string){
+  status.textContent=message;
+  status.hidden=false;
+  window.setTimeout(()=>{
+    status.hidden=true;
+  },2200);
+}
 
 input.addEventListener("change",async()=>{
   if(importing) return;
@@ -35,20 +46,18 @@ input.addEventListener("change",async()=>{
   const file=files.find(value=>/\.(blend|glb|gltf|obj)$/i.test(value.name));
   if(!file) return;
   importing=true;
-  status.textContent="Releasing previous model…";
+  showStatus("Loading model…");
   try{
     const model=await assets.loadModels(files);
+    currentModel=model;
     scene.frameObject(model);
-    const metrics=performance.measureModel(model);
-    const characterData=character.inspect(model);
-    const providerLabel=characterData.providers.join("+");
-    const controlCount=characterData.outfits.length+characterData.hair.length+characterData.morphs.length;
-    status.textContent="Loaded "+file.name+" • "+metrics.triangles.toLocaleString()+" tris • "+
-      metrics.meshes+" meshes • "+providerLabel+" • "+controlCount+" character controls";
+    character.inspect(model);
     animation.dispose();
+    distanceQuality.reset();
+    showStatus("Model ready");
   }catch(error){
     console.error(error);
-    status.textContent=error instanceof Error?error.message:"Import failed";
+    showStatus(error instanceof Error?error.message:"Import failed");
   }finally{
     importing=false;
     input.value="";
@@ -64,6 +73,7 @@ function frame(time:number){
   camera.update(delta);
   physics.step(delta);
   animation.update(delta);
+  distanceQuality.update(scene.camera,currentModel);
   performance.recordFrame(delta);
   scene.render();
   requestAnimationFrame(frame);
