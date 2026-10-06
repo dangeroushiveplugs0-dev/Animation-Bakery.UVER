@@ -50,17 +50,12 @@ export class UverUI {
       }, 3000);
     };
 
-    const revealZone = document.createElement("div");
-    revealZone.className = "uver-rail-reveal-zone";
-    revealZone.setAttribute("aria-hidden", "true");
-    host.appendChild(revealZone);
-
     rail.addEventListener("pointerdown", show);
     rail.addEventListener("pointermove", show);
     rail.addEventListener("mouseenter", show);
-    revealZone.addEventListener("pointerenter", show);
-    revealZone.addEventListener("pointerdown", show);
-    document.addEventListener("pointerdown", show, {passive: true});
+    document.addEventListener("pointerdown", event => {
+      if (event.clientY >= window.innerHeight - 90) show();
+    }, {passive: true});
 
     show();
   }
