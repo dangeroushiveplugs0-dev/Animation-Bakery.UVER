@@ -13,7 +13,7 @@ html,body,#app{margin:0;width:100%;height:100%;overflow:hidden;background:#11121
 .hint{position:fixed;left:50%;bottom:62px;transform:translateX(-50%);font-size:10px;color:#858c95;opacity:.75;pointer-events:none;white-space:nowrap}
 
 #uver-ui{position:fixed;inset:0;z-index:20;pointer-events:none;font-family:inherit;color:#e9ecef}
-.uver-command-rail{position:absolute;left:8px;right:8px;bottom:max(8px, env(safe-area-inset-bottom));height:48px;display:flex;align-items:center;gap:7px;padding:4px 6px;border:1px solid #30343a;border-radius:13px;background:#15171aeF;backdrop-filter:blur(12px);box-shadow:0 12px 34px #0009;overflow-x:auto;scrollbar-width:none;pointer-events:auto}
+.uver-command-rail{position:absolute;left:8px;right:8px;bottom:calc(10px + env(safe-area-inset-bottom, 0px) + var(--uver-system-bottom, 0px));z-index:30;height:48px;display:flex;align-items:center;gap:7px;padding:4px 6px;border:1px solid #30343a;border-radius:13px;background:#15171aeF;backdrop-filter:blur(12px);box-shadow:0 12px 34px #0009;overflow-x:auto;scrollbar-width:none;pointer-events:auto}
 .uver-command-rail::-webkit-scrollbar{display:none}
 .uver-rail-group{display:flex;align-items:center;gap:5px;flex:0 0 auto}
 .uver-rail-separator{width:1px;height:27px;background:#343940;flex:0 0 auto}
@@ -47,12 +47,12 @@ html,body,#app{margin:0;width:100%;height:100%;overflow:hidden;background:#11121
 .uver-preset-grid button{min-height:58px;border:1px solid #30343a;border-radius:9px;background:#1c1f23;color:#dfe3e7;font:inherit;font-size:11px;display:flex;align-items:center;justify-content:center;gap:7px}
 .uver-preset-grid button span{font-size:17px;color:var(--accent)}
 .uver-empty,.uver-small{font-size:10px;color:#8d949d;line-height:1.45;padding:7px}
-.uver-axis-widget{position:absolute;right:8px;top:68px;width:78px;height:78px;pointer-events:auto;filter:drop-shadow(0 5px 12px #0008)}
+.uver-axis-widget{position:absolute;right:8px;top:68px;width:88px;height:88px;pointer-events:auto;filter:drop-shadow(0 5px 12px #0008)}
 .uver-axis-stage{position:relative;width:100%;height:100%;border:1px solid #30343a;border-radius:50%;background:#15171ad9;backdrop-filter:blur(8px)}
 .uver-axis-center{position:absolute;left:50%;top:50%;width:7px;height:7px;transform:translate(-50%,-50%);border-radius:50%;background:#dfe3e7;box-shadow:0 0 0 2px #111214}
 .uver-axis-line{position:absolute;height:2px;transform-origin:0 50%;border-radius:2px;pointer-events:none}
 .uver-axis-line.x{background:#ff4d62}.uver-axis-line.y{background:#72e66b}.uver-axis-line.z{background:#4d8dff}
-.uver-axis-dot{position:absolute;width:25px;height:25px;margin:0;padding:0;border:1px solid #111820;border-radius:50%;color:#0b0d0f;font:800 10px/1 system-ui,sans-serif;display:grid;place-items:center;box-shadow:0 2px 7px #0008;touch-action:manipulation;transition:left .08s linear,top .08s linear,opacity .08s linear,transform .08s linear}
+.uver-axis-dot{position:absolute;width:27px;height:27px;margin:0;padding:0;border:1px solid #111820;border-radius:50%;color:#0b0d0f;font:800 10px/1 system-ui,sans-serif;display:grid;place-items:center;box-shadow:0 2px 7px #0008;touch-action:manipulation;transition:left .16s cubic-bezier(.2,.8,.2,1),top .16s cubic-bezier(.2,.8,.2,1),opacity .16s linear,transform .16s cubic-bezier(.2,.8,.2,1)}
 .uver-axis-dot.x{background:#ff4d62}.uver-axis-dot.y{background:#72e66b}.uver-axis-dot.z{background:#4d8dff}
 .uver-axis-dot:active{filter:brightness(.82)}
 
