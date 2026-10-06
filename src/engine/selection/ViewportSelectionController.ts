@@ -73,6 +73,7 @@ export class ViewportSelectionController {
       this.gizmos.attach(bone);
       this.highlight.clear();
       event.preventDefault();
+      event.stopImmediatePropagation();
       return;
     }
 
@@ -101,6 +102,7 @@ export class ViewportSelectionController {
       this.gizmos.attach(bone);
       this.highlight.clear();
       event.preventDefault();
+      event.stopImmediatePropagation();
       return;
     }
 
@@ -142,36 +144,73 @@ export class ViewportSelectionController {
   private pickBone(): THREE.Bone | null {
     if (!this.bones.length) return null;
 
-    const distance = this.camera.position.distanceTo(this.raycaster.ray.origin);
-    const threshold = THREE.MathUtils.clamp(distance * 0.025, 0.02, 0.3);
+    // Use screen-space picking rather than a world-space threshold. This keeps
+    // bones easy to hit on a phone whether the model is near or far away.
+    const rect = this.canvas.getBoundingClientRect();
+    const px = (this.pointer.x + 1) * 0.5 * rect.width;
+    const py = (1 - this.pointer.y) * 0.5 * rect.height;
+    const tolerance = 30;
 
     let best: THREE.Bone | null = null;
     let bestDistance = Infinity;
 
     const start = new THREE.Vector3();
     const end = new THREE.Vector3();
-    const closestRay = new THREE.Vector3();
-    const closestSegment = new THREE.Vector3();
+    const startScreen = new THREE.Vector2();
+    const endScreen = new THREE.Vector2();
+
+    const project = (world: THREE.Vector3, out: THREE.Vector2) => {
+      const ndc = world.clone().project(this.camera);
+      out.set(
+        (ndc.x + 1) * 0.5 * rect.width,
+        (1 - ndc.y) * 0.5 * rect.height
+      );
+    };
+
+    const pointToSegmentDistance = (
+      x: number,
+      y: number,
+      ax: number,
+      ay: number,
+      bx: number,
+      by: number
+    ) => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const lengthSq = dx * dx + dy * dy;
+      if (lengthSq < 1e-6) return Math.hypot(x - ax, y - ay);
+      const t = THREE.MathUtils.clamp(
+        ((x - ax) * dx + (y - ay) * dy) / lengthSq,
+        0,
+        1
+      );
+      return Math.hypot(x - (ax + t * dx), y - (ay + t * dy));
+    };
 
     for (const bone of this.bones) {
       bone.getWorldPosition(start);
-
       const child = bone.children.find(child => (child as THREE.Bone).isBone);
+
       if (child) {
         child.getWorldPosition(end);
       } else {
-        end.copy(start).add(new THREE.Vector3(0, threshold * 2, 0));
+        end.copy(start);
       }
 
-      const distanceSq = this.raycaster.ray.distanceSqToSegment(
-        start,
-        end,
-        closestRay,
-        closestSegment
+      project(start, startScreen);
+      project(end, endScreen);
+
+      const distance = pointToSegmentDistance(
+        px,
+        py,
+        startScreen.x,
+        startScreen.y,
+        endScreen.x,
+        endScreen.y
       );
 
-      if (distanceSq < threshold * threshold && distanceSq < bestDistance) {
-        bestDistance = distanceSq;
+      if (distance <= tolerance && distance < bestDistance) {
+        bestDistance = distance;
         best = bone;
       }
     }
