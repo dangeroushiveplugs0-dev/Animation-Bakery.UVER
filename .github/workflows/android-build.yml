@@ -32,33 +32,34 @@ jobs:
           package com.dangeroushive.animationbakery.uver;
 
           import android.os.Bundle;
-          import android.view.View;
-          import android.view.ViewGroup;
-          import androidx.core.graphics.Insets;
-          import androidx.core.view.ViewCompat;
+          import android.os.Bundle;
+          import androidx.core.view.WindowCompat;
           import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
             @Override
-            public void onResume() {
-              super.onResume();
-              View webView = getBridge().getWebView();
-              if (webView == null) return;
-              ViewCompat.setOnApplyWindowInsetsListener(webView, (view, insets) -> {
-                Insets navigation = insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.navigationBars());
-              webView.setSystemUiVisibility(webView.getSystemUiVisibility());
-                ViewGroup.LayoutParams raw = view.getLayoutParams();
-                if (raw instanceof ViewGroup.MarginLayoutParams) {
-                  ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) raw;
-                  if (params.bottomMargin != navigation.bottom) {
-                    params.bottomMargin = navigation.bottom;
-                    view.setLayoutParams(params);
-                  }
-                }
-                return insets;
-              });
-              ViewCompat.requestApplyInsets(webView);
+            public void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              enterImmersive();
+            }
+
+            @Override
+            public void onWindowFocusChanged(boolean hasFocus) {
+              super.onWindowFocusChanged(hasFocus);
+              if (hasFocus) enterImmersive();
+            }
+
+            private void enterImmersive() {
+              WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+              WindowInsetsControllerCompat controller =
+                  WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+              if (controller == null) return;
+              controller.setSystemBarsBehavior(
+                  WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+              controller.hide(WindowInsetsCompat.Type.navigationBars());
+              controller.hide(WindowInsetsCompat.Type.statusBars());
             }
           }
           EOF
@@ -67,5 +68,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Animation-Bakery-UVER-0.1.7
+          name: Animation-Bakery-UVER-0.1.8
           path: android/app/build/outputs/apk/debug/app-debug.apk
