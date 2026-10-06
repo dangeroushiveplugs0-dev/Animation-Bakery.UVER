@@ -5,7 +5,7 @@ export class BoneOverlayManager {
   private readonly entries = new Map<string, {bone: THREE.Bone; body: THREE.Mesh; joint: THREE.Mesh}>();
   private root: THREE.Object3D | null = null;
 
-  constructor(private readonly scene: THREE.Scene) {
+  constructor(private readonly scene: THREE.Scene, private readonly camera: THREE.PerspectiveCamera) {
     this.group.name = "UVER_BoneOverlay";
     this.group.renderOrder = 900;
     this.scene.add(this.group);
@@ -33,7 +33,7 @@ export class BoneOverlayManager {
       body.renderOrder = 901;
 
       const joint = new THREE.Mesh(
-        new THREE.SphereGeometry(0.14, 10, 8),
+        new THREE.OctahedronGeometry(1, 0),
         new THREE.MeshBasicMaterial({
           color: 0x64e8a0,
           depthTest: false,
@@ -92,14 +92,15 @@ export class BoneOverlayManager {
         new THREE.Vector3(0, 1, 0),
         direction.normalize()
       );
-      body.scale.set(
-        Math.max(length * 0.10, 0.035),
-        Math.max(length * 0.50, 0.05),
-        Math.max(length * 0.10, 0.035)
-      );
+      const distance = this.camera.position.distanceTo(joint.position);
+      const worldPerPixel = (2 * Math.max(distance, 0.001) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5))) / Math.max(this.camera.getFilmHeight(), 1);
+      const thickness = worldPerPixel * 7.0;
+      const jointSize = worldPerPixel * 6.0;
 
-      const jointSize = THREE.MathUtils.clamp(length * 0.12, 0.035, 0.16);
-      joint.scale.setScalar(jointSize / 0.14);
+      // Keep the editor bones visually readable on a phone without letting
+      // model-scale differences turn the joints into giant spheres.
+      body.scale.set(thickness, Math.max(length * 0.5, thickness), thickness);
+      joint.scale.setScalar(jointSize);
     }
   }
 
