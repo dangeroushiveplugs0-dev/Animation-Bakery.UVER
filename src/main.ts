@@ -106,6 +106,7 @@ function frame(time:number){
   const delta=Math.min((time-previous)/1000,0.05);
   previous=time;
   camera.update(delta);
+  ui.updateAxisFromCamera(scene.camera);
   physics.step(delta);
   if(!paused) animation.update(delta);
   bones.update();
