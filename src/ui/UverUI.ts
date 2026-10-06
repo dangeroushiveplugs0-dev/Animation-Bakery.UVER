@@ -13,7 +13,6 @@ export class UverUI {
   private panel: HTMLElement | null = null;
   private readonly materialStates = new Map<THREE.Material, boolean>();
   private readonly unsubscribeSelection: () => void;
-  private railHideTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly scene: THREE.Scene,
@@ -37,27 +36,42 @@ export class UverUI {
 
   dispose() {
     this.unsubscribeSelection();
-    if (this.railHideTimer) clearTimeout(this.railHideTimer);
     document.getElementById("uver-ui")?.remove();
   }
 
-  private installRailAutoHide(host: HTMLElement, rail: HTMLElement) {
-    const show = () => {
-      rail.classList.remove("uver-rail-hidden");
-      if (this.railHideTimer) clearTimeout(this.railHideTimer);
-      this.railHideTimer = setTimeout(() => {
-        if (!this.activePanel) rail.classList.add("uver-rail-hidden");
-      }, 3000);
-    };
+  updateAxisFromCamera(camera: THREE.PerspectiveCamera) {
+    const stage = document.querySelector<HTMLElement>(".uver-axis-stage");
+    if (!stage) return;
 
-    rail.addEventListener("pointerdown", show);
-    rail.addEventListener("pointermove", show);
-    rail.addEventListener("mouseenter", show);
-    document.addEventListener("pointerdown", event => {
-      if (event.clientY >= window.innerHeight - 90) show();
-    }, {passive: true});
+    const axes: Array<{axis: "x" | "y" | "z"; vector: THREE.Vector3}> = [
+      {axis: "x", vector: new THREE.Vector3(1, 0, 0)},
+      {axis: "y", vector: new THREE.Vector3(0, 1, 0)},
+      {axis: "z", vector: new THREE.Vector3(0, 0, 1)}
+    ];
+    const inverse = camera.quaternion.clone().invert();
 
-    show();
+    for (const entry of axes) {
+      const screen = entry.vector.clone().applyQuaternion(inverse);
+      const depth = screen.z;
+      const radius = 29;
+      const x = 50 + screen.x * radius;
+      const y = 50 - screen.y * radius;
+      const button = stage.querySelector<HTMLButtonElement>(`[data-axis="${entry.axis}"]`);
+      const line = stage.querySelector<HTMLElement>(`[data-axis-line="${entry.axis}"]`);
+      if (!button || !line) continue;
+
+      button.style.left = `${x}%`;
+      button.style.top = `${y}%`;
+      button.style.opacity = depth < 0 ? "1" : "0.38";
+      button.style.zIndex = depth < 0 ? "3" : "1";
+      button.style.transform = `translate(-50%, -50%) scale(${depth < 0 ? 1 : 0.86})`;
+      line.style.left = "50%";
+      line.style.top = "50%";
+      line.style.width = `${Math.hypot(x - 50, y - 50)}%`;
+      line.style.transform = `translateY(-50%) rotate(${Math.atan2(y - 50, x - 50)}rad)`;
+      line.style.opacity = depth < 0 ? "0.85" : "0.28";
+      line.style.zIndex = depth < 0 ? "2" : "0";
+    }
   }
 
   private install() {
@@ -88,15 +102,19 @@ export class UverUI {
 
       <div class="uver-panel" hidden></div>
 
-      <div class="uver-axis-widget" aria-label="View axis">
-        <button data-axis="y">Y</button>
-        <div><button data-axis="x">X</button><button data-axis="z">Z</button></div>
+      <div class="uver-axis-widget" aria-label="3D view axis">
+        <div class="uver-axis-stage">
+          <span class="uver-axis-line x" data-axis-line="x"></span>
+          <span class="uver-axis-line y" data-axis-line="y"></span>
+          <span class="uver-axis-line z" data-axis-line="z"></span>
+          <span class="uver-axis-center"></span>
+          <button class="uver-axis-dot x" data-axis="x" aria-label="View X axis">X</button>
+          <button class="uver-axis-dot y" data-axis="y" aria-label="View Y axis">Y</button>
+          <button class="uver-axis-dot z" data-axis="z" aria-label="View Z axis">Z</button>
+        </div>
       </div>
     `;
     document.body.appendChild(host);
-
-    const rail = host.querySelector<HTMLElement>(".uver-command-rail");
-    if (rail) this.installRailAutoHide(host, rail);
 
     host.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button => {
       button.addEventListener("click", () => {
