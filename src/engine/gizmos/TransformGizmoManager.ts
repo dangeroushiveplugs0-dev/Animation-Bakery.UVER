@@ -55,7 +55,6 @@ export class TransformGizmoManager {
     if (object && (object as THREE.Bone).isBone) this.boneIK.begin(object as THREE.Bone);
     this.activeAxis = null;
     this.activeMode = null;
-    if (this.target && (this.target as THREE.Bone).isBone) this.boneIK.begin(this.target as THREE.Bone);
     this.sync();
   }
 
