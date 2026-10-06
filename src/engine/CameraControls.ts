@@ -70,7 +70,7 @@ export class CameraControls {
     return this.controls.getTarget(new THREE.Vector3());
   }
 
-  snapTo(axis: "x" | "y" | "z") {
+  snapTo(axis: "x" | "y" | "z", requestedSign?: 1 | -1) {
     const target = this.controls.getTarget(new THREE.Vector3());
     const offset = this.camera.position.clone().sub(target);
     const distance = Math.max(offset.length(), 0.8);
