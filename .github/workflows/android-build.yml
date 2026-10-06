@@ -46,7 +46,8 @@ jobs:
               View webView = getBridge().getWebView();
               if (webView == null) return;
               ViewCompat.setOnApplyWindowInsetsListener(webView, (view, insets) -> {
-                Insets navigation = insets.getInsets(WindowInsetsCompat.Type.navigationBars());
+                Insets navigation = insets.getInsetsIgnoringVisibility(WindowInsetsCompat.Type.navigationBars());
+              webView.setSystemUiVisibility(webView.getSystemUiVisibility());
                 ViewGroup.LayoutParams raw = view.getLayoutParams();
                 if (raw instanceof ViewGroup.MarginLayoutParams) {
                   ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) raw;
