@@ -40,53 +40,35 @@ export class UverUI {
   }
 
   updateAxisFromCamera(camera: THREE.PerspectiveCamera) {
-    const stage = document.querySelector<HTMLElement>(".uver-axis-stage");
-    if (!stage) return;
+    const cube = document.querySelector<HTMLElement>(".uver-axis-cube");
+    if (!cube) return;
 
     camera.updateMatrixWorld(true);
+    const q = camera.quaternion.clone().invert();
 
+    // The cube uses the inverse camera rotation, so it behaves like a real
+    // modeling-app orientation gizmo rather than a fixed XYZ button cluster.
+    cube.style.transform =
+      "rotateX(" + THREE.MathUtils.radToDeg(new THREE.Euler().setFromQuaternion(q, "YXZ").x) + "deg) " +
+      "rotateY(" + THREE.MathUtils.radToDeg(new THREE.Euler().setFromQuaternion(q, "YXZ").y) + "deg) " +
+      "rotateZ(" + THREE.MathUtils.radToDeg(new THREE.Euler().setFromQuaternion(q, "YXZ").z) + "deg)";
+
+    const faces = cube.querySelectorAll<HTMLElement>("[data-axis-face]");
+    const axes: Record<string, THREE.Vector3> = {
+      x: new THREE.Vector3(1, 0, 0),
+      y: new THREE.Vector3(0, 1, 0),
+      z: new THREE.Vector3(0, 0, 1)
+    };
     const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward).normalize();
-    const up = camera.up.clone().normalize();
-    const right = new THREE.Vector3().crossVectors(forward, up).normalize();
+    camera.getWorldDirection(forward);
 
-    const axes: Array<{axis: "x" | "y" | "z"; vector: THREE.Vector3}> = [
-      {axis: "x", vector: new THREE.Vector3(1, 0, 0)},
-      {axis: "y", vector: new THREE.Vector3(0, 1, 0)},
-      {axis: "z", vector: new THREE.Vector3(0, 0, 1)}
-    ];
-
-    const radius = 38;
-    for (const entry of axes) {
-      const sx = entry.vector.dot(right);
-      const sy = entry.vector.dot(up);
-      const depth = entry.vector.dot(forward);
-      const x = 50 + sx * radius;
-      const y = 50 - sy * radius;
-
-      const button = stage.querySelector<HTMLButtonElement>(`[data-axis="${entry.axis}"]`);
-      const line = stage.querySelector<HTMLElement>(`[data-axis-line="${entry.axis}"]`);
-      if (!button || !line) continue;
-
-      const front = depth < 0;
-      const scale = front ? 1.08 : 0.72;
-      const opacity = front ? 1 : 0.3;
-
-      button.style.left = `${x}%`;
-      button.style.top = `${y}%`;
-      button.style.opacity = String(opacity);
-      button.style.zIndex = front ? "3" : "1";
-      button.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-      const length = Math.hypot(x - 50, y - 50);
-      line.style.left = "50%";
-      line.style.top = "50%";
-      line.style.width = `${Math.max(6, length)}%`;
-      line.style.transform = `translateY(-50%) rotate(${Math.atan2(y - 50, x - 50)}rad)`;
-      line.style.opacity = front ? "0.95" : "0.22";
-      line.style.zIndex = front ? "2" : "0";
-    }
+    faces.forEach(face => {
+      const axis = axes[face.dataset.axisFace || "x"];
+      const facing = Math.abs(axis.dot(forward));
+      face.style.opacity = String(0.38 + facing * 0.62);
+    });
   }
+
 
   private install() {
     const host = document.createElement("div");
@@ -118,13 +100,14 @@ export class UverUI {
 
       <div class="uver-axis-widget" aria-label="3D view axis">
         <div class="uver-axis-stage">
-          <span class="uver-axis-line x" data-axis-line="x"></span>
-          <span class="uver-axis-line y" data-axis-line="y"></span>
-          <span class="uver-axis-line z" data-axis-line="z"></span>
-          <span class="uver-axis-center"></span>
-          <button class="uver-axis-dot x" data-axis="x" aria-label="View X axis">X</button>
-          <button class="uver-axis-dot y" data-axis="y" aria-label="View Y axis">Y</button>
-          <button class="uver-axis-dot z" data-axis="z" aria-label="View Z axis">Z</button>
+          <div class="uver-axis-cube" aria-hidden="true">
+            <button class="uver-axis-face front" data-axis="z">Z</button>
+            <button class="uver-axis-face back">Z</button>
+            <button class="uver-axis-face right" data-axis="x">X</button>
+            <button class="uver-axis-face left">X</button>
+            <button class="uver-axis-face top" data-axis="y">Y</button>
+            <button class="uver-axis-face bottom">Y</button>
+          </div>
         </div>
       </div>
     `;
