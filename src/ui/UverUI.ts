@@ -141,7 +141,10 @@ export class UverUI {
     });
 
     host.querySelectorAll<HTMLButtonElement>("[data-axis]").forEach(button => {
-      button.addEventListener("click", () => this.onCameraSnap(button.dataset.axis as "x" | "y" | "z"));
+      button.addEventListener("click", () => this.onCameraSnap(
+        button.dataset.axis as "x" | "y" | "z",
+        button.dataset.sign === "-1" ? -1 : 1
+      ));
     });
   }
 
