@@ -25,6 +25,10 @@ export class ViewportSelectionController {
     canvas.addEventListener("pointercancel", this.onCancel);
   }
 
+  getSelectionManager(): SelectionManager {
+    return this.selection;
+  }
+
   setRoot(root: THREE.Object3D | null) {
     this.root = root;
     this.bones.length = 0;
