@@ -101,12 +101,12 @@ export class UverUI {
       <div class="uver-axis-widget" aria-label="3D view axis">
         <div class="uver-axis-stage">
           <div class="uver-axis-cube" aria-hidden="true">
-            <button class="uver-axis-face front" data-axis="z">Z</button>
-            <button class="uver-axis-face back">Z</button>
-            <button class="uver-axis-face right" data-axis="x">X</button>
-            <button class="uver-axis-face left">X</button>
-            <button class="uver-axis-face top" data-axis="y">Y</button>
-            <button class="uver-axis-face bottom">Y</button>
+            <button class="uver-axis-face front" data-axis="z" data-sign="1">Z</button>
+            <button class="uver-axis-face back" data-axis="z" data-sign="-1">Z</button>
+            <button class="uver-axis-face right" data-axis="x" data-sign="1">X</button>
+            <button class="uver-axis-face left" data-axis="x" data-sign="-1">X</button>
+            <button class="uver-axis-face top" data-axis="y" data-sign="1">Y</button>
+            <button class="uver-axis-face bottom" data-axis="y" data-sign="-1">Y</button>
           </div>
         </div>
       </div>
