@@ -93,14 +93,19 @@ export class BoneOverlayManager {
         direction.normalize()
       );
       const distance = this.camera.position.distanceTo(joint.position);
-      const worldPerPixel = (2 * Math.max(distance, 0.001) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5))) / Math.max(this.canvas.clientHeight, 1);
-      const thickness = worldPerPixel * 7.0;
-      const jointSize = worldPerPixel * 6.0;
+      const rect = this.canvas.getBoundingClientRect();
+      const viewportHeight = Math.max(rect.height, window.innerHeight, 1);
+      const worldPerPixel = (2 * Math.max(distance, 0.001) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5))) / viewportHeight;
+      const thickness = worldPerPixel * 3.5;
+      const jointSize = worldPerPixel * 4.5;
+      const maxVisualSize = Math.max(length * 0.18, worldPerPixel * 8.0);
 
-      // Keep the editor bones visually readable on a phone without letting
-      // model-scale differences turn the joints into giant spheres.
-      body.scale.set(thickness, Math.max(length * 0.5, thickness), thickness);
-      joint.scale.setScalar(jointSize);
+      body.scale.set(
+        Math.min(thickness, maxVisualSize),
+        Math.max(length * 0.5, thickness),
+        Math.min(thickness, maxVisualSize)
+      );
+      joint.scale.setScalar(Math.min(jointSize, maxVisualSize));
     }
   }
 
