@@ -2,6 +2,8 @@ import "./styles.css";
 import * as THREE from "three";
 import {SceneManager} from "./engine/SceneManager";
 import {CameraControls} from "./engine/CameraControls";
+import {TransformGizmoManager} from "./engine/gizmos/TransformGizmoManager";
+import {BoneOverlayManager} from "./engine/rig/BoneOverlayManager";
 import {PhysicsEngine} from "./engine/physics/PhysicsEngine";
 import {AssetManager} from "./engine/AssetManager";
 import {PerformanceManager} from "./engine/performance/PerformanceManager";
@@ -9,17 +11,36 @@ import {BrowserDeviceCapabilities} from "./engine/device/BrowserDeviceCapabiliti
 import {AnimationManager} from "./engine/animation/AnimationManager";
 import {CharacterController} from "./character/CharacterController";
 import {DistanceQualityManager} from "./engine/performance/DistanceQualityManager";
+import {SelectionManager} from "./engine/selection/SelectionManager";
+import {SelectionHighlightManager} from "./engine/selection/SelectionHighlightManager";
+import {ViewportSelectionController} from "./engine/selection/ViewportSelectionController";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=
   '<canvas id="viewport"></canvas>'+
-  '<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.5 • Three.js WebGL2</small></div>'+
+  '<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.6 • Three.js WebGL2</small></div>'+
   '<div class="toolbar"><label class="tool-button">Import Model<input id="model-input" type="file" accept=".blend,.glb,.gltf,.obj,.bin,.png,.jpg,.jpeg" multiple hidden></label></div>'+
   '<div id="status" class="status" hidden></div>'+
   '<div class="hint">1 finger: orbit • 2 fingers: pan/zoom</div>';
 
 const canvas=document.querySelector<HTMLCanvasElement>("#viewport")!;
 const scene=new SceneManager(canvas);
+
+// Selection/gizmo listeners are registered before camera-controls so a gizmo
+// or bone can claim a gesture without the camera also starting an orbit.
+const selectionState=new SelectionManager();
+const highlight=new SelectionHighlightManager(scene.scene);
+const gizmos=new TransformGizmoManager(scene.scene,scene.camera,canvas);
+const bones=new BoneOverlayManager(scene.scene);
+const viewportSelection=new ViewportSelectionController(
+  scene.camera,
+  canvas,
+  selectionState,
+  highlight,
+  gizmos,
+  bones
+);
+
 const camera=new CameraControls(scene.camera,canvas);
 const physics=new PhysicsEngine();
 const assets=new AssetManager(scene.scene,scene.renderer);
@@ -51,7 +72,8 @@ input.addEventListener("change",async()=>{
   try{
     const model=await assets.loadModels(files);
     currentModel=model;
-    scene.frameObject(model);
+    viewportSelection.setRoot(model);
+    camera.frameObject(model);
     character.inspect(model);
     animation.dispose();
     distanceQuality.reset();
@@ -74,6 +96,8 @@ function frame(time:number){
   camera.update(delta);
   physics.step(delta);
   animation.update(delta);
+  bones.update();
+  gizmos.sync();
   distanceQuality.update(scene.camera,currentModel);
   performance.recordFrame(delta);
   scene.render();
