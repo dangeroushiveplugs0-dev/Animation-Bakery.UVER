@@ -21,7 +21,7 @@ export class BoneOverlayManager {
       const bone = object as THREE.Bone;
 
       const body = new THREE.Mesh(
-        new THREE.OctahedronGeometry(0.12, 0),
+        new THREE.CylinderGeometry(0.055, 0.09, 1, 6),
         new THREE.MeshBasicMaterial({
           color: 0x28a8ff,
           depthTest: false,
@@ -33,7 +33,7 @@ export class BoneOverlayManager {
       body.renderOrder = 901;
 
       const joint = new THREE.Mesh(
-        new THREE.OctahedronGeometry(1, 0),
+        new THREE.SphereGeometry(0.075, 8, 6),
         new THREE.MeshBasicMaterial({
           color: 0x64e8a0,
           depthTest: false,
@@ -97,8 +97,8 @@ export class BoneOverlayManager {
       const viewportHeight = Math.max(rect.height, window.innerHeight, 1);
       const worldPerPixel = (2 * Math.max(distance, 0.001) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5))) / viewportHeight;
       const thickness = worldPerPixel * 3.5;
-      const jointSize = worldPerPixel * 4.5;
-      const maxVisualSize = Math.max(length * 0.18, worldPerPixel * 8.0);
+      const jointSize = worldPerPixel * 3.0;
+      const maxVisualSize = Math.max(length * 0.16, worldPerPixel * 6.0);
 
       body.scale.set(
         Math.min(thickness, maxVisualSize),
