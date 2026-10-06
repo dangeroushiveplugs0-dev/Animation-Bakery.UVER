@@ -5,7 +5,7 @@ export class BoneOverlayManager {
   private readonly entries = new Map<string, {bone: THREE.Bone; body: THREE.Mesh; joint: THREE.Mesh}>();
   private root: THREE.Object3D | null = null;
 
-  constructor(private readonly scene: THREE.Scene, private readonly camera: THREE.PerspectiveCamera) {
+  constructor(private readonly scene: THREE.Scene, private readonly camera: THREE.PerspectiveCamera, private readonly canvas: HTMLCanvasElement) {
     this.group.name = "UVER_BoneOverlay";
     this.group.renderOrder = 900;
     this.scene.add(this.group);
@@ -93,7 +93,7 @@ export class BoneOverlayManager {
         direction.normalize()
       );
       const distance = this.camera.position.distanceTo(joint.position);
-      const worldPerPixel = (2 * Math.max(distance, 0.001) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5))) / Math.max(this.camera.getFilmHeight(), 1);
+      const worldPerPixel = (2 * Math.max(distance, 0.001) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov * 0.5))) / Math.max(this.canvas.clientHeight, 1);
       const thickness = worldPerPixel * 7.0;
       const jointSize = worldPerPixel * 6.0;
 
