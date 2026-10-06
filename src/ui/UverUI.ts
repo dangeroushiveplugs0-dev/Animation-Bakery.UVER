@@ -43,34 +43,48 @@ export class UverUI {
     const stage = document.querySelector<HTMLElement>(".uver-axis-stage");
     if (!stage) return;
 
+    camera.updateMatrixWorld(true);
+
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward).normalize();
+    const up = camera.up.clone().normalize();
+    const right = new THREE.Vector3().crossVectors(forward, up).normalize();
+
     const axes: Array<{axis: "x" | "y" | "z"; vector: THREE.Vector3}> = [
       {axis: "x", vector: new THREE.Vector3(1, 0, 0)},
       {axis: "y", vector: new THREE.Vector3(0, 1, 0)},
       {axis: "z", vector: new THREE.Vector3(0, 0, 1)}
     ];
-    const inverse = camera.quaternion.clone().invert();
 
+    const radius = 38;
     for (const entry of axes) {
-      const screen = entry.vector.clone().applyQuaternion(inverse);
-      const depth = screen.z;
-      const radius = 29;
-      const x = 50 + screen.x * radius;
-      const y = 50 - screen.y * radius;
+      const sx = entry.vector.dot(right);
+      const sy = entry.vector.dot(up);
+      const depth = entry.vector.dot(forward);
+      const x = 50 + sx * radius;
+      const y = 50 - sy * radius;
+
       const button = stage.querySelector<HTMLButtonElement>(`[data-axis="${entry.axis}"]`);
       const line = stage.querySelector<HTMLElement>(`[data-axis-line="${entry.axis}"]`);
       if (!button || !line) continue;
 
+      const front = depth < 0;
+      const scale = front ? 1.08 : 0.72;
+      const opacity = front ? 1 : 0.3;
+
       button.style.left = `${x}%`;
       button.style.top = `${y}%`;
-      button.style.opacity = depth < 0 ? "1" : "0.38";
-      button.style.zIndex = depth < 0 ? "3" : "1";
-      button.style.transform = `translate(-50%, -50%) scale(${depth < 0 ? 1 : 0.86})`;
+      button.style.opacity = String(opacity);
+      button.style.zIndex = front ? "3" : "1";
+      button.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+      const length = Math.hypot(x - 50, y - 50);
       line.style.left = "50%";
       line.style.top = "50%";
-      line.style.width = `${Math.hypot(x - 50, y - 50)}%`;
+      line.style.width = `${Math.max(6, length)}%`;
       line.style.transform = `translateY(-50%) rotate(${Math.atan2(y - 50, x - 50)}rad)`;
-      line.style.opacity = depth < 0 ? "0.85" : "0.28";
-      line.style.zIndex = depth < 0 ? "2" : "0";
+      line.style.opacity = front ? "0.95" : "0.22";
+      line.style.zIndex = front ? "2" : "0";
     }
   }
 
