@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import {BoneIKController} from "../rig/BoneIKController";
 
 export type TransformMode = "translate" | "rotate" | "scale";
 export type TransformAxis = "x" | "y" | "z" | "xyz";
@@ -20,6 +21,7 @@ export class TransformGizmoManager {
   private readonly axisVector = new THREE.Vector3();
   private readonly worldPoint = new THREE.Vector3();
   private readonly cameraDirection = new THREE.Vector3();
+  private readonly boneIK = new BoneIKController();
   private lastPointerX = 0;
   private lastPointerY = 0;
 
@@ -50,8 +52,10 @@ export class TransformGizmoManager {
 
   attach(object: THREE.Object3D | null) {
     this.target = object;
+    if (object && (object as THREE.Bone).isBone) this.boneIK.begin(object as THREE.Bone);
     this.activeAxis = null;
     this.activeMode = null;
+    if (this.target && (this.target as THREE.Bone).isBone) this.boneIK.begin(this.target as THREE.Bone);
     this.sync();
   }
 
@@ -287,6 +291,7 @@ export class TransformGizmoManager {
 
     this.canvas.setPointerCapture(event.pointerId);
     event.preventDefault();
+    event.stopImmediatePropagation();
   };
 
   private onMove = (event: PointerEvent) => {
@@ -304,17 +309,24 @@ export class TransformGizmoManager {
 
       if (this.activeAxis === "xyz") {
         const desiredWorld = currentWorld.clone().add(delta);
-        if (this.target.parent) {
+        if ((this.target as THREE.Bone).isBone && this.boneIK.hasChain()) {
+          this.boneIK.solveTo(desiredWorld);
+        } else if (this.target.parent) {
           this.target.position.copy(this.target.parent.worldToLocal(desiredWorld));
         } else {
           this.target.position.copy(desiredWorld);
         }
       } else {
         const axis = this.axisDirection(this.activeAxis);
-        // The target position is parent-local, so in local mode the axis is
-        // already expressed in the correct coordinate system.
         const amount = delta.dot(axis);
-        this.target.position.copy(this.startPosition).add(axis.multiplyScalar(amount));
+        const desiredWorld = currentWorld.clone().add(axis.multiplyScalar(amount));
+        if ((this.target as THREE.Bone).isBone && this.boneIK.hasChain()) {
+          this.boneIK.solveTo(desiredWorld);
+        } else if (this.target.parent) {
+          this.target.position.copy(this.target.parent.worldToLocal(desiredWorld));
+        } else {
+          this.target.position.copy(desiredWorld);
+        }
       }
     } else if (this.activeMode === "scale") {
       const dy = (event.clientY - this.lastPointerY) * -0.012;
@@ -348,6 +360,7 @@ export class TransformGizmoManager {
     this.lastPointerY = event.clientY;
     this.sync();
     event.preventDefault();
+    event.stopImmediatePropagation();
   };
 
   private onUp = (event: PointerEvent) => {
