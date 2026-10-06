@@ -206,8 +206,8 @@ export class UverUI {
         : [(object as THREE.Mesh).material as THREE.Material];
 
       for (const material of materials) {
-        if (!(material as THREE.MeshBasicMaterial).wireframe === undefined) continue;
-        const wireMaterial = material as THREE.MeshBasicMaterial & { wireframe: boolean };
+        if (!("wireframe" in material)) continue;
+        const wireMaterial = material as THREE.Material & { wireframe: boolean };
         wireMaterial.wireframe = this.wireframe;
         wireMaterial.needsUpdate = true;
       }
