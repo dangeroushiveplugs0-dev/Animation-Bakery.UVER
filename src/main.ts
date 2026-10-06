@@ -32,7 +32,7 @@ const scene=new SceneManager(canvas);
 const selectionState=new SelectionManager();
 const highlight=new SelectionHighlightManager(scene.scene);
 const gizmos=new TransformGizmoManager(scene.scene,scene.camera,canvas);
-const bones=new BoneOverlayManager(scene.scene);
+const bones=new BoneOverlayManager(scene.scene,scene.camera);
 const viewportSelection=new ViewportSelectionController(
   scene.camera,
   canvas,
