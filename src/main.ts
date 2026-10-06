@@ -62,7 +62,7 @@ const ui=new UverUI(
   viewportSelection,
   ()=>{ if(currentModel) camera.frameObject(currentModel); },
   value=>{ paused=value; },
-  axis=>camera.snapTo(axis)
+   (axis, sign)=>camera.snapTo(axis, sign)
 );
 
 function showStatus(message:string){
