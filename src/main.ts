@@ -19,7 +19,7 @@ import {UverUI} from "./ui/UverUI";
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=
   '<canvas id="viewport"></canvas>'+
-  '<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.6 • Three.js WebGL2</small></div>'+
+  '<div class="hud"><strong>Animation Bakery <span>UVER</span></strong><small>0.1.7 • Three.js WebGL2</small></div>'+
   '<div class="toolbar"><label class="tool-button">Import Model<input id="model-input" type="file" accept=".blend,.glb,.gltf,.obj,.bin,.png,.jpg,.jpeg" multiple hidden></label></div>'+
   '<div id="status" class="status" hidden></div>'+
   '<div class="hint">1 finger: orbit • 2 fingers: pan/zoom</div>';
