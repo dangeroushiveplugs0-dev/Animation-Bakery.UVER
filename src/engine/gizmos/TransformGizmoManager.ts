@@ -311,9 +311,8 @@ export class TransformGizmoManager {
         }
       } else {
         const axis = this.axisDirection(this.activeAxis);
-        if (this.space === "local") {
-          axis.applyQuaternion(this.target.getWorldQuaternion(new THREE.Quaternion()).invert());
-        }
+        // The target position is parent-local, so in local mode the axis is
+        // already expressed in the correct coordinate system.
         const amount = delta.dot(axis);
         this.target.position.copy(this.startPosition).add(axis.multiplyScalar(amount));
       }
