@@ -14,6 +14,7 @@ import {DistanceQualityManager} from "./engine/performance/DistanceQualityManage
 import {SelectionManager} from "./engine/selection/SelectionManager";
 import {SelectionHighlightManager} from "./engine/selection/SelectionHighlightManager";
 import {ViewportSelectionController} from "./engine/selection/ViewportSelectionController";
+import {UverUI} from "./ui/UverUI";
 
 const app=document.querySelector<HTMLDivElement>("#app")!;
 app.innerHTML=
@@ -53,6 +54,16 @@ const input=document.querySelector<HTMLInputElement>("#model-input")!;
 const status=document.querySelector<HTMLDivElement>("#status")!;
 let importing=false;
 let currentModel:THREE.Object3D|null=null;
+let paused=false;
+
+const ui=new UverUI(
+  scene.scene,
+  gizmos,
+  viewportSelection,
+  ()=>{ if(currentModel) camera.frameObject(currentModel); },
+  value=>{ paused=value; },
+  axis=>camera.snapTo(axis)
+);
 
 function showStatus(message:string){
   status.textContent=message;
@@ -73,6 +84,7 @@ input.addEventListener("change",async()=>{
     const model=await assets.loadModels(files);
     currentModel=model;
     viewportSelection.setRoot(model);
+    ui.setRoot(model);
     camera.frameObject(model);
     character.inspect(model);
     animation.dispose();
@@ -95,7 +107,7 @@ function frame(time:number){
   previous=time;
   camera.update(delta);
   physics.step(delta);
-  animation.update(delta);
+  if(!paused) animation.update(delta);
   bones.update();
   gizmos.sync();
   distanceQuality.update(scene.camera,currentModel);
