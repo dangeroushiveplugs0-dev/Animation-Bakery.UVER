@@ -47,6 +47,26 @@ export class ViewportSelectionController {
     this.gizmos.detach();
   }
 
+  clearSelection() {
+    this.clear();
+  }
+
+  selectBoneObject(bone: THREE.Bone) {
+    this.selection.selectBone(bone.uuid, bone.name || "Bone");
+    this.gizmos.attach(bone);
+    this.highlight.clear();
+  }
+
+  selectObjectDirect(object: THREE.Object3D) {
+    if ((object as THREE.Bone).isBone) {
+      this.selectBoneObject(object as THREE.Bone);
+      return;
+    }
+    this.selection.selectObject(object.uuid, object.name || "Object");
+    this.highlight.selectObject(object);
+    this.gizmos.attach(object);
+  }
+
   private setPointer(event: PointerEvent) {
     const rect = this.canvas.getBoundingClientRect();
     this.pointer.set(
@@ -69,9 +89,7 @@ export class ViewportSelectionController {
 
     const bone = this.pickBone();
     if (bone) {
-      this.selection.selectBone(bone.uuid, bone.name || "Bone");
-      this.gizmos.attach(bone);
-      this.highlight.clear();
+      this.selectBoneObject(bone);
       event.preventDefault();
       event.stopImmediatePropagation();
       return;
@@ -98,9 +116,7 @@ export class ViewportSelectionController {
     // Bones get priority, even when the bone line passes over the mesh.
     const bone = this.pickBone();
     if (bone) {
-      this.selection.selectBone(bone.uuid, bone.name || "Bone");
-      this.gizmos.attach(bone);
-      this.highlight.clear();
+      this.selectBoneObject(bone);
       event.preventDefault();
       event.stopImmediatePropagation();
       return;
