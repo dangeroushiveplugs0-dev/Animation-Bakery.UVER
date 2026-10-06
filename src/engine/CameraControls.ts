@@ -69,4 +69,26 @@ export class CameraControls {
   get target(): THREE.Vector3 {
     return this.controls.getTarget(new THREE.Vector3());
   }
+
+  snapTo(axis: "x" | "y" | "z") {
+    const target = this.controls.getTarget(new THREE.Vector3());
+    const offset = this.camera.position.clone().sub(target);
+    const distance = Math.max(offset.length(), 0.8);
+    const sign = offset.dot(
+      axis === "x" ? new THREE.Vector3(1, 0, 0) :
+      axis === "y" ? new THREE.Vector3(0, 1, 0) :
+      new THREE.Vector3(0, 0, 1)
+    ) >= 0 ? 1 : -1;
+
+    const position = target.clone();
+    if (axis === "x") position.x += distance * sign;
+    if (axis === "y") position.y += distance * sign;
+    if (axis === "z") position.z += distance * sign;
+
+    this.controls.setLookAt(
+      position.x, position.y, position.z,
+      target.x, target.y, target.z,
+      true
+    );
+  }
 }
