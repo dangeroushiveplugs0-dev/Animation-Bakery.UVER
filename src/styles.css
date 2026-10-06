@@ -47,14 +47,17 @@ html,body,#app{margin:0;width:100%;height:100%;overflow:hidden;background:#11121
 .uver-preset-grid button{min-height:58px;border:1px solid #30343a;border-radius:9px;background:#1c1f23;color:#dfe3e7;font:inherit;font-size:11px;display:flex;align-items:center;justify-content:center;gap:7px}
 .uver-preset-grid button span{font-size:17px;color:var(--accent)}
 .uver-empty,.uver-small{font-size:10px;color:#8d949d;line-height:1.45;padding:7px}
-.uver-axis-widget{position:absolute;right:8px;top:68px;width:88px;height:88px;pointer-events:auto;filter:drop-shadow(0 5px 12px #0008)}
-.uver-axis-stage{position:relative;width:100%;height:100%;border:1px solid #30343a;border-radius:50%;background:#15171ad9;backdrop-filter:blur(8px)}
-.uver-axis-center{position:absolute;left:50%;top:50%;width:7px;height:7px;transform:translate(-50%,-50%);border-radius:50%;background:#dfe3e7;box-shadow:0 0 0 2px #111214}
-.uver-axis-line{position:absolute;height:2px;transform-origin:0 50%;border-radius:2px;pointer-events:none}
-.uver-axis-line.x{background:#ff4d62}.uver-axis-line.y{background:#72e66b}.uver-axis-line.z{background:#4d8dff}
-.uver-axis-dot{position:absolute;width:27px;height:27px;margin:0;padding:0;border:1px solid #111820;border-radius:50%;color:#0b0d0f;font:800 10px/1 system-ui,sans-serif;display:grid;place-items:center;box-shadow:0 2px 7px #0008;touch-action:manipulation;transition:left .16s cubic-bezier(.2,.8,.2,1),top .16s cubic-bezier(.2,.8,.2,1),opacity .16s linear,transform .16s cubic-bezier(.2,.8,.2,1)}
-.uver-axis-dot.x{background:#ff4d62}.uver-axis-dot.y{background:#72e66b}.uver-axis-dot.z{background:#4d8dff}
-.uver-axis-dot:active{filter:brightness(.82)}
+.uver-axis-widget{position:absolute;right:8px;top:68px;width:92px;height:92px;pointer-events:auto;perspective:260px;filter:drop-shadow(0 5px 12px #0008)}
+.uver-axis-stage{position:relative;width:100%;height:100%;display:grid;place-items:center}
+.uver-axis-cube{position:relative;width:48px;height:48px;transform-style:preserve-3d;transition:transform .12s linear}
+.uver-axis-face{position:absolute;width:48px;height:48px;margin:0;padding:0;border:1px solid #111820;border-radius:6px;background:#20252a;color:#e9ecef;font:800 11px/48px system-ui,sans-serif;text-align:center;box-shadow:inset 0 0 0 1px #ffffff12;backface-visibility:hidden;touch-action:manipulation}
+.uver-axis-face.front{transform:translateZ(24px);background:#29303a}
+.uver-axis-face.back{transform:rotateY(180deg) translateZ(24px);background:#24282e}
+.uver-axis-face.right{transform:rotateY(90deg) translateZ(24px);background:#34282c;color:#ff6678}
+.uver-axis-face.left{transform:rotateY(-90deg) translateZ(24px);background:#24282e}
+.uver-axis-face.top{transform:rotateX(90deg) translateZ(24px);background:#28352a;color:#78ed72}
+.uver-axis-face.bottom{transform:rotateX(-90deg) translateZ(24px);background:#24282e}
+.uver-axis-face:active{filter:brightness(.8)}
 
 @media(max-width:600px){
   .hud{top:7px;left:7px}
