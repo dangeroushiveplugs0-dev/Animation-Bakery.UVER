@@ -331,9 +331,11 @@ export class BlendImporter{
       (parent??root).add(object);
     }
 
-    if(objectsByName.size===0){
-      for(const template of meshTemplates.values()) root.add(template);
-    }
+    // Never fall back to rendering every extracted mesh datablock. A .blend can
+    // contain orphan/helper mesh data that is not an actual scene object. Only
+    // object records of Blender type 1 (MESH) are allowed into the render tree.
+    // Materials remain attached to those meshes because they are render data,
+    // not independent scene objects.
 
     root.userData.blendVersion=blend.header.versionString;
     root.userData.blenderArmatures=armatures.map(armature=>({
