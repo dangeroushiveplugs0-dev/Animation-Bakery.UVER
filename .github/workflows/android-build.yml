@@ -25,6 +25,42 @@ jobs:
         run: npx cap add android
       - name: Sync Capacitor
         run: npx cap sync android
+      - name: Patch Android navigation insets
+        run: |
+          MAIN="$(find android/app/src/main/java -name MainActivity.java | head -n 1)"
+          cat > "$MAIN" <<'EOF'
+          package com.dangeroushive.animationbakery.uver;
+
+          import android.os.Bundle;
+          import android.view.View;
+          import android.view.ViewGroup;
+          import androidx.core.graphics.Insets;
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onResume() {
+              super.onResume();
+              View webView = getBridge().getWebView();
+              if (webView == null) return;
+              ViewCompat.setOnApplyWindowInsetsListener(webView, (view, insets) -> {
+                Insets navigation = insets.getInsets(WindowInsetsCompat.Type.navigationBars());
+                ViewGroup.LayoutParams raw = view.getLayoutParams();
+                if (raw instanceof ViewGroup.MarginLayoutParams) {
+                  ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) raw;
+                  if (params.bottomMargin != navigation.bottom) {
+                    params.bottomMargin = navigation.bottom;
+                    view.setLayoutParams(params);
+                  }
+                }
+                return insets;
+              });
+              ViewCompat.requestApplyInsets(webView);
+            }
+          }
+          EOF
       - name: Build debug APK
         run: cd android && ./gradlew assembleDebug
       - name: Upload APK
