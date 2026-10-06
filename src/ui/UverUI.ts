@@ -20,7 +20,7 @@ export class UverUI {
     private readonly selection: ViewportSelectionController,
     private readonly onFrame: () => void,
     private readonly onPause: (paused: boolean) => void,
-    private readonly onCameraSnap: (axis: "x" | "y" | "z") => void
+    private readonly onCameraSnap: (axis: "x" | "y" | "z", sign: 1 | -1) => void
   ) {
     this.unsubscribeSelection = this.selection.getSelectionManager().subscribe(() => {
       if (this.activePanel === "select") this.refreshTree();
