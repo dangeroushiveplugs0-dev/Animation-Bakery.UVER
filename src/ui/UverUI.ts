@@ -13,6 +13,7 @@ export class UverUI {
   private panel: HTMLElement | null = null;
   private readonly materialStates = new Map<THREE.Material, boolean>();
   private readonly unsubscribeSelection: () => void;
+  private railHideTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly scene: THREE.Scene,
@@ -36,7 +37,32 @@ export class UverUI {
 
   dispose() {
     this.unsubscribeSelection();
+    if (this.railHideTimer) clearTimeout(this.railHideTimer);
     document.getElementById("uver-ui")?.remove();
+  }
+
+  private installRailAutoHide(host: HTMLElement, rail: HTMLElement) {
+    const show = () => {
+      rail.classList.remove("uver-rail-hidden");
+      if (this.railHideTimer) clearTimeout(this.railHideTimer);
+      this.railHideTimer = setTimeout(() => {
+        if (!this.activePanel) rail.classList.add("uver-rail-hidden");
+      }, 3000);
+    };
+
+    const revealZone = document.createElement("div");
+    revealZone.className = "uver-rail-reveal-zone";
+    revealZone.setAttribute("aria-hidden", "true");
+    host.appendChild(revealZone);
+
+    rail.addEventListener("pointerdown", show);
+    rail.addEventListener("pointermove", show);
+    rail.addEventListener("mouseenter", show);
+    revealZone.addEventListener("pointerenter", show);
+    revealZone.addEventListener("pointerdown", show);
+    document.addEventListener("pointerdown", show, {passive: true});
+
+    show();
   }
 
   private install() {
@@ -73,6 +99,9 @@ export class UverUI {
       </div>
     `;
     document.body.appendChild(host);
+
+    const rail = host.querySelector<HTMLElement>(".uver-command-rail");
+    if (rail) this.installRailAutoHide(host, rail);
 
     host.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button => {
       button.addEventListener("click", () => {
